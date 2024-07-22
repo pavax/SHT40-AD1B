@@ -37,6 +37,8 @@
 #include "SHT40AD1BSensor.h"
 /* Class Implementation ------------------------------------------------------*/
 
+#define MAX_FETCH_TIME 1000 * 3  // max time [ms] to wait for the data to become available
+
 /** Constructor
  * @param i2c object of an helper class which handles the I2C peripheral
  * @param address the address of the component's instance
@@ -141,7 +143,12 @@ int32_t SHT40AD1BSensor::data_get(float *buffer)
   dev_i2c->requestFrom(((uint8_t)(((address) >> 1) & 0x7F)), 6);
 
   int i = 0;
+  unsigned long startTime = millis();
   while (dev_i2c->available()) {
+    if (millis() - startTime > MAX_FETCH_TIME) {
+      // Handle timeout
+       return 1;
+    }
     data[i] = dev_i2c->read();
     i++;
   }
